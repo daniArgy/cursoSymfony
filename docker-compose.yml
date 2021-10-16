@@ -1,0 +1,67 @@
+version: '3.5'
+
+services:
+  db:
+    container_name: db
+    build:
+      context: ./docker/database
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: database
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - backend
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+
+  nginx-web:
+    container_name: nginx-web
+    build:
+      context: ./docker/nginx
+      args:
+        UID: $UID
+    ports:
+      - "8080:80"
+      - "4043:443"
+    volumes:
+      - ./application:/application
+    depends_on:
+      - php
+      - db
+    networks:
+      - frontend
+      - backend
+
+  php:
+    container_name: php
+    build:
+      context: docker/php
+      args:
+        UID: $UID
+    working_dir: /application
+    volumes:
+      - ./application:/application
+    ###> XDEBUG 3 ###
+    # Use your client IP here
+    # Linux: run "ip a | grep docker0"
+    # Windows (with WSL2) and Mac: host.docker.internal
+    environment:
+      XDEBUG_CLIENT_HOST: 172.17.0.1
+      XDEBUG_CLIENT_PORT: 9003
+      PHP_IDE_CONFIG: serverName=docker-dev-env-for-symfony
+    depends_on:
+      - db
+    networks:
+      - backend
+
+
+volumes:
+  db-data:
+
+networks:
+  frontend:
+    name: custom_front
+  backend:
+    name: custom_backend
