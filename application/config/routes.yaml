@@ -1,3 +1,17 @@
 #index:
 #    path: /
 #    controller: App\Controller\DefaultController::index
+
+articles:
+  path: /articles/{_locale}/{year}/{title}.{_format}
+  controller: App\Controller\ArticlesController::articles
+  requirements:
+    year: '\d{4}'
+    _locale: 'en|es|fr'
+    _format: 'html|rss'
+  defaults:
+    _format: 'html'
+
+#/articles/es/2010/mi-post
+#/articles/en/2010/my-post.rss
+#/articles/es/2013/mi-otro-post.html
